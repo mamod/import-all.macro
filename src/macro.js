@@ -31,7 +31,11 @@ function prevalMacros({references, state, babel}) {
 
 function syncVersion({referencePath, state, babel}) {
   const {types: t} = babel
-  const {file: {opts: {filename}}} = state
+  const {
+    file: {
+      opts: {filename},
+    },
+  } = state
   const importSources = getImportSources(
     referencePath.parentPath.parentPath,
     path.dirname(filename),
@@ -39,14 +43,17 @@ function syncVersion({referencePath, state, babel}) {
 
   const {importNodes, objectProperties} = importSources.reduce(
     (all, source) => {
-      const id = referencePath.scope.generateUidIdentifier(source)
+      const {originalPath, compiledPath} = source
+      const id = referencePath.scope.generateUidIdentifier(originalPath)
       all.importNodes.push(
         t.importDeclaration(
           [t.importNamespaceSpecifier(id)],
-          t.stringLiteral(source),
+          t.stringLiteral(compiledPath),
         ),
       )
-      all.objectProperties.push(t.objectProperty(t.stringLiteral(source), id))
+      all.objectProperties.push(
+        t.objectProperty(t.stringLiteral(originalPath), id),
+      )
       return all
     },
     {importNodes: [], objectProperties: []},
@@ -61,7 +68,11 @@ function syncVersion({referencePath, state, babel}) {
 
 function asyncVersion({referencePath, state, babel}) {
   const {types: t, template} = babel
-  const {file: {opts: {filename}}} = state
+  const {
+    file: {
+      opts: {filename},
+    },
+  } = state
   const promiseTemplate = template(`
     Promise.all(ALL_IMPORTS).then(function importAllHandler(importVals) {
       return IMPORT_OBJ
@@ -74,13 +85,14 @@ function asyncVersion({referencePath, state, babel}) {
 
   const {dynamicImports, objectProperties} = importSources.reduce(
     (all, source, index) => {
+      const {originalPath, compiledPath} = source
       all.dynamicImports.push(
-        t.callExpression(t.import(), [t.stringLiteral(source)]),
+        t.callExpression(t.import(), [t.stringLiteral(compiledPath)]),
       )
       const computed = true
       all.objectProperties.push(
         t.objectProperty(
-          t.stringLiteral(source),
+          t.stringLiteral(originalPath),
           t.memberExpression(
             t.identifier('importVals'),
             t.numericLiteral(index),
@@ -103,21 +115,26 @@ function asyncVersion({referencePath, state, babel}) {
 
 function deferredVersion({referencePath, state, babel}) {
   const {types: t} = babel
-  const {file: {opts: {filename}}} = state
+  const {
+    file: {
+      opts: {filename},
+    },
+  } = state
   const importSources = getImportSources(
     referencePath.parentPath.parentPath,
     path.dirname(filename),
   )
 
   const objectProperties = importSources.map(source => {
+    const {originalPath, compiledPath} = source
     return t.objectProperty(
-      t.stringLiteral(source),
+      t.stringLiteral(originalPath),
       t.functionExpression(
         null,
         [],
         t.blockStatement([
           t.returnStatement(
-            t.callExpression(t.import(), [t.stringLiteral(source)]),
+            t.callExpression(t.import(), [t.stringLiteral(compiledPath)]),
           ),
         ]),
       ),
@@ -144,5 +161,10 @@ function getImportSources(callExpressionPath, cwd) {
     )
   }
 
-  return glob.sync(globValue, {cwd})
+  return glob.sync(globValue, {cwd}).map(sourcePath => {
+    return {
+      originalPath: sourcePath,
+      compiledPath: sourcePath.replace(/\.(tsx?|jsx)$/, ''),
+    }
+  })
 }

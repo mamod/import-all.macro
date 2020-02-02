@@ -51,7 +51,7 @@ pluginTester({
       import importAll from '../macro'
 
       document.getElementById('load-stuff').addEventListener('click', () => {
-        importAll('./fixtures/*.js').then(all => {
+        importAll('./fixtures/**/*.{js,jsx,ts,tsx}').then(all => {
           console.log(all)
         })
       })
@@ -59,12 +59,12 @@ pluginTester({
     'README:2 `importAll.sync` uses static imports': `
       import importAll from '../macro'
 
-      const a = importAll.sync('./fixtures/*.js')
+      const a = importAll.sync('./fixtures/*.*')
     `,
     'README:3 `importAll.deferred` gives an object with dynamic imports': `
       import importAll from '../macro'
 
-      const routes = importAll.deferred('./fixtures/*.js')
+      const routes = importAll.deferred('./fixtures/*.{js,ts,tsx}')
     `,
   },
 })

@@ -5,7 +5,7 @@ exports[`macros README:1 \`importAll\` uses dynamic import: README:1 \`importAll
 import importAll from 'import-all.macro'
 
 document.getElementById('load-stuff').addEventListener('click', () => {
-  importAll('./files/*.js').then(all => {
+  importAll('./files/**/*.{js,jsx,ts,tsx}').then(all => {
     console.log(all)
   })
 })
@@ -18,6 +18,10 @@ document.getElementById('load-stuff').addEventListener('click', () => {
     import('./files/b.js'),
     import('./files/c.js'),
     import('./files/d.js'),
+    import('./files/e'),
+    import('./files/f'),
+    import('./files/g'),
+    import('./files/g/index.js'),
   ])
     .then(function importAllHandler(importVals) {
       return {
@@ -25,6 +29,10 @@ document.getElementById('load-stuff').addEventListener('click', () => {
         './files/b.js': importVals[1],
         './files/c.js': importVals[2],
         './files/d.js': importVals[3],
+        './files/e.ts': importVals[4],
+        './files/f.tsx': importVals[5],
+        './files/g.jsx': importVals[6],
+        './files/g/index.js': importVals[7],
       }
     })
     .then(all => {
@@ -39,7 +47,7 @@ exports[`macros README:2 \`importAll.sync\` uses static imports: README:2 \`impo
 
 import importAll from 'import-all.macro'
 
-const a = importAll.sync('./files/*.js')
+const a = importAll.sync('./files/*.*')
 
       ↓ ↓ ↓ ↓ ↓ ↓
 
@@ -47,12 +55,18 @@ import * as _filesAJs from './files/a.js'
 import * as _filesBJs from './files/b.js'
 import * as _filesCJs from './files/c.js'
 import * as _filesDJs from './files/d.js'
+import * as _filesETs from './files/e'
+import * as _filesFTsx from './files/f'
+import * as _filesGJsx from './files/g'
 
 const a = {
   './files/a.js': _filesAJs,
   './files/b.js': _filesBJs,
   './files/c.js': _filesCJs,
   './files/d.js': _filesDJs,
+  './files/e.ts': _filesETs,
+  './files/f.tsx': _filesFTsx,
+  './files/g.jsx': _filesGJsx,
 }
 
 
@@ -62,7 +76,7 @@ exports[`macros README:3 \`importAll.deferred\` gives an object with dynamic imp
 
 import importAll from 'import-all.macro'
 
-const routes = importAll.deferred('./files/*.js')
+const routes = importAll.deferred('./files/*.{js,ts,tsx}')
 
       ↓ ↓ ↓ ↓ ↓ ↓
 
@@ -78,6 +92,12 @@ const routes = {
   },
   './files/d.js': function() {
     return import('./files/d.js')
+  },
+  './files/e.ts': function() {
+    return import('./files/e')
+  },
+  './files/f.tsx': function() {
+    return import('./files/f')
   },
 }
 
